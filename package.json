@@ -1,0 +1,37 @@
+{
+  "name": "@wasm-sandbox/monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Micro-Ambienti Isolate in WebAssembly per l'esecuzione sicura di codice non fidato",
+  "author": "MRJonam91",
+  "license": "Apache-2.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run --workspaces --if-present build",
+    "test": "npm run --workspaces --if-present test",
+    "lint": "npm run --workspaces --if-present lint",
+    "clean": "npm run --workspaces --if-present clean"
+  },
+  "keywords": [
+    "wasm",
+    "webassembly",
+    "sandbox",
+    "security",
+    "isolation",
+    "metering",
+    "gas",
+    "fuel",
+    "quickjs",
+    "python",
+    "lua"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "typescript": "^7.0.2"
+  }
+}

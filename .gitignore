@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build and Dist
+dist/
+build/
+out/
+bin/
+*.wasm
+!fixtures/**/*.wasm
+!test/fixtures/**/*.wasm
+*.wat
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Logs & Diagnostics
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Coverage and Testing
+coverage/
+.nyc_output/
+*.lcov
+test-results/
+
+# Cache & Toolchains
+.cache/
+.turbo/
+.parcel-cache/
+.eslintcache/
+.tsbuildinfo
+
+# OS Specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editors
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+.idea/
+*.sublime-project
+*.sublime-workspace

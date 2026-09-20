@@ -1,0 +1,19 @@
+{
+  "name": "@wasm-sandbox/core",
+  "version": "0.1.0",
+  "description": "Core interfaces, policy manager, and VFS for WASM-Sandbox",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test"
+  },
+  "keywords": [
+    "wasm",
+    "sandbox",
+    "isolation",
+    "security"
+  ],
+  "author": "MRJonam91",
+  "license": "Apache-2.0"
+}
