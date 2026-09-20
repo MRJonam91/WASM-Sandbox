@@ -1,28 +1,23 @@
-# Threat Model & Sicurezza di WASM-Sandbox
+# Threat Model & Security Posture of WASM-Sandbox
 
-## 1. Obiettivi di Sicurezza
-- **Confidenzialità Host**: Il guest non deve in alcun modo poter leggere variabili d'ambiente, memoria di processo, chiavi crittografiche o file dell'host.
-- **Integrità Host**: Il guest non può modificare file di sistema, eseguire comandi della shell (fork/exec) o alterare lo stato del runtime host.
-- **Disponibilità (DoS Prevention)**: Loop infiniti (`while(true){}`), fork bomb logiche o allocazioni compulsive di memoria non devono bloccare né consumare la CPU/RAM dell'host oltre la quota impostata.
-- **Isolamento Multi-Tenant**: Esecuzioni di utenti diversi non devono condividere memoria o residui di stato tra esecuzioni distinte.
+[English](THREAT_MODEL.md) | [Italiano](THREAT_MODEL.it.md)
 
 ---
 
-## 2. Vettori di Rischio e Mitigazioni
+## 1. Security Objectives
+- **Host Confidentiality**: The guest environment cannot inspect host environment variables, process memory, cryptographic keys, or host filesystem resources.
+- **Host Integrity**: The guest cannot invoke OS shell commands, fork processes, or mutate host application state.
+- **Availability (DoS Prevention)**: Infinite loops (`while(true){}`), recursive bombs, or malicious regexes must not exhaust host CPU or linear memory beyond prescribed quotas.
+- **Multi-Tenant Isolation**: Independent sessions never share linear memory pages or mutable state.
 
-| Vettore di Attacco | Rischio | Mitigazione WASM-Sandbox |
+---
+
+## 2. Attack Vectors & Mitigations
+
+| Attack Vector | Risk | WASM-Sandbox Mitigation |
 | :--- | :--- | :--- |
-| **CPU Starvation (Infinite Loop)** | L'host satura un core della CPU bloccando il thread. | **Fuel Metering** decrementale + hard timeout di fallback. Al raggiungimento di zero carburante il guest trap-interrompe. |
-| **Memory Exhaustion (OOM Bomb)** | Il guest tenta di allocare gigabyte di memoria fino al crash del processo host. | **Rigid Linear Memory Bound**: `maximum` limit sulle pagine WASM (es. max 64MB). Allocazioni oltre il limite falliscono con OOM isolato. |
-| **Filesystem Traversal (`../../etc/passwd`)** | Il guest cerca di navigare l'albero delle directory dell'host. | **No Host FS Access**: Nessuna syscall WASI reale esposta. VFS puramente in RAM con mapping virtuale esplicito. |
-| **Network Exfiltration / SSRF** | Il codice invia richieste verso `localhost`, metadati cloud (`169.254.169.254`) o server C2. | **Deny-by-default**: I socket TCP/UDP sono disabilitati. Eventuale fetch HTTP è mediato da un broker host con allowlist rigida di domini e blocco CIDR privati. |
-| **Side-Channel Timing Attacks (Spectre/Meltdown)** | Misurazione precisa del tempo per dedurre dati da cache. | Orologio ad alta risoluzione (`performance.now()`) mascherato con jitter e arrotondamento (coarse-grained clock). |
-| **State Pollution tra chiamate** | Una variabile globale o prototype injection persiste tra esecuzioni successive. | **Ephemeral Instances**: Ogni esecuzione riparte da uno snapshot pulito della memoria o da un'istanza WASM deallocata al termine. |
-
----
-
-## 3. Garanzie del Modello WASM
-WebAssembly fornisce di per sé una sandbox con:
-- Memoria lineare disgiunta dallo spazio di indirizzamento dell'applicazione host.
-- Control Flow Integrity (CFI) garantita dalla validazione strutturale del bytecode WASM.
-- Assenza di puntatori grezzi verso la memoria dell'host.
+| **CPU Starvation (Infinite Loop)** | Satures host CPU core, blocking the thread. | **Deterministic Fuel Metering**: Decrementing instruction counter. When fuel reaches 0, execution traps immediately. |
+| **Memory Exhaustion (OOM Bomb)** | Attempts to allocate gigabytes until host crashes. | **Rigid Linear Memory Bound**: WebAssembly page boundary (`maximum` limit). Allocations beyond the limit fail with isolated OOM. |
+| **Filesystem Traversal (`../../etc/passwd`)** | Attempts to traverse host directories. | **No Host FS Access**: No direct WASI syscalls exposed. Ephemeral in-memory VFS with strict path normalization. |
+| **Network Exfiltration / SSRF** | Guest attempts contacting localhost, cloud metadata (`169.254.169.254`), or C2 servers. | **Deny-by-default**: Sockets disabled. Proxy broker with domain allowlist and private IP filtering. |
+| **Cross-Tenant State Pollution** | Globals or prototype modifications persist across runs. | **Ephemeral Instances**: Each run operates on fresh or reset WASM instances. |

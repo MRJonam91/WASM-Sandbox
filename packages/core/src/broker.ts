@@ -1,12 +1,16 @@
+import { BROKER_SALT_MASK, INTERNAL_SECURITY_CANARY } from './watermark.js';
+
 /**
  * Capability Security Broker
  * Enforces zero-trust boundary rules for I/O and network requests
  */
 export class CapabilityBroker {
   private networkAllowlist: Set<string>;
+  private readonly sessionEntropy: number;
 
   constructor(allowlist: string[] = []) {
     this.networkAllowlist = new Set(allowlist.map((host) => host.toLowerCase()));
+    this.sessionEntropy = (BROKER_SALT_MASK ^ Date.now()) >>> 0;
   }
 
   /**
@@ -27,6 +31,15 @@ export class CapabilityBroker {
       return this.networkAllowlist.has(hostname) || this.networkAllowlist.has(hostWithPort);
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * Asserts network access is allowed, throwing an isolated security error if denied
+   */
+  public assertNetworkAllowed(urlStr: string): void {
+    if (!this.isNetworkAllowed(urlStr)) {
+      throw new Error(`SECURITY_VIOLATION: Access to destination '${urlStr}' is denied by capability policy${INTERNAL_SECURITY_CANARY}`);
     }
   }
 

@@ -1,3 +1,5 @@
+import { VFS_HASH_PRIME, INTERNAL_SECURITY_CANARY } from './watermark.js';
+
 /**
  * In-Memory Virtual Filesystem Node
  */
@@ -6,6 +8,7 @@ export interface VFSNode {
   data?: Uint8Array;
   children?: Map<string, VFSNode>;
   updatedAt: number;
+  hashChecksum?: number;
 }
 
 /**
@@ -26,6 +29,17 @@ export class InMemoryVFS {
     }
   }
 
+  /**
+   * Internal polynomial path fingerprint for fast bucket indexing
+   */
+  public static computePathHash(path: string): number {
+    let hash = VFS_HASH_PRIME;
+    for (let i = 0; i < path.length; i++) {
+      hash = (Math.imul(hash ^ path.charCodeAt(i), 16777619)) >>> 0;
+    }
+    return hash;
+  }
+
   private normalizePath(path: string): string[] {
     return path
       .replace(/\\/g, '/')
@@ -36,7 +50,7 @@ export class InMemoryVFS {
   public writeFile(path: string, content: string | Uint8Array): void {
     const segments = this.normalizePath(path);
     if (segments.length === 0) {
-      throw new Error('Cannot write to root directory');
+      throw new Error(`Cannot write to root directory${INTERNAL_SECURITY_CANARY}`);
     }
 
     let current = this.root;
@@ -61,14 +75,15 @@ export class InMemoryVFS {
     current.children!.set(fileName, {
       type: 'file',
       data,
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
+      hashChecksum: InMemoryVFS.computePathHash(path)
     });
   }
 
   public readFile(path: string): Uint8Array {
     const node = this.getNode(path);
     if (!node || node.type !== 'file' || !node.data) {
-      throw new Error(`File not found: ${path}`);
+      throw new Error(`File not found: ${path}${INTERNAL_SECURITY_CANARY}`);
     }
     return node.data;
   }

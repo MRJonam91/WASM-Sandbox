@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 440" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d1117" />
+      <stop offset="100%" stop-color="#161b22" />
+    </linearGradient>
+    <linearGradient id="glow-cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+    <linearGradient id="alert-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ef4444" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+    <filter id="box-shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+
+    <style>
+      @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+      }
+      @keyframes step1 { 0%, 10% { opacity: 0; } 15%, 100% { opacity: 1; } }
+      @keyframes step2 { 0%, 25% { opacity: 0; } 30%, 100% { opacity: 1; } }
+      @keyframes step3 { 0%, 45% { opacity: 0; } 50%, 100% { opacity: 1; } }
+      @keyframes step4 { 0%, 65% { opacity: 0; } 70%, 100% { opacity: 1; } }
+      @keyframes step5 { 0%, 82% { opacity: 0; } 87%, 100% { opacity: 1; } }
+
+      .term-bg { fill: url(#bg-grad); stroke: #30363d; stroke-width: 1.5; }
+      .term-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 13px; fill: #8b949e; }
+      .code { font-family: "JetBrains Mono", "Fira Code", monospace, "Courier New"; font-size: 13.5px; }
+      .c-muted { fill: #8b949e; }
+      .c-blue { fill: #58a6ff; }
+      .c-green { fill: #3fb950; font-weight: bold; }
+      .c-yellow { fill: #d29922; }
+      .c-red { fill: #f85149; font-weight: bold; }
+      .c-cyan { fill: #38bdf8; font-weight: bold; }
+      .c-white { fill: #f0f6fc; }
+
+      .anim-1 { animation: step1 7s infinite ease-in-out; }
+      .anim-2 { animation: step2 7s infinite ease-in-out; }
+      .anim-3 { animation: step3 7s infinite ease-in-out; }
+      .anim-4 { animation: step4 7s infinite ease-in-out; }
+      .anim-5 { animation: step5 7s infinite ease-in-out; }
+      .cursor { animation: blink 0.8s infinite; }
+    </style>
+  </defs>
+
+  <!-- Terminal Window Outer -->
+  <rect x="20" y="20" width="840" height="400" rx="12" class="term-bg" filter="url(#box-shadow)" />
+
+  <!-- Window Header -->
+  <path d="M 20 32 A 12 12 0 0 1 32 20 L 848 20 A 12 12 0 0 1 860 32 L 860 56 L 20 56 Z" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+  <circle cx="45" cy="38" r="6" fill="#ff5f56" />
+  <circle cx="65" cy="38" r="6" fill="#ffbd2e" />
+  <circle cx="85" cy="38" r="6" fill="#27c93f" />
+  <text x="440" y="42" text-anchor="middle" class="term-title">wasm-sandbox — isolated untrusted code execution demo</text>
+
+  <!-- Terminal Content Lines -->
+  <!-- Line 1: Input Code -->
+  <g class="code">
+    <text x="50" y="92">
+      <tspan class="c-blue">const</tspan> <tspan class="c-white">sandbox</tspan> <tspan class="c-muted">=</tspan> <tspan class="c-blue">await</tspan> <tspan class="c-yellow">WasmSandbox</tspan><tspan class="c-white">.init({</tspan> <tspan class="c-cyan">fuelLimit:</tspan> <tspan class="c-white">10_000_000,</tspan> <tspan class="c-cyan">maxMemory:</tspan> <tspan class="c-white">16_777_216 });</tspan>
+    </text>
+  </g>
+
+  <!-- Line 2: Running hostile untrusted snippet -->
+  <g class="code anim-1">
+    <text x="50" y="130">
+      <tspan class="c-muted">&gt; Running hostile code:</tspan> <tspan class="c-red">"while(true) { mem.push(alloc(1MB)); fetch('169.254.169.254'); }"</tspan>
+    </text>
+  </g>
+
+  <!-- Line 3: Comparison Benchmark Container vs WASM -->
+  <g class="code anim-2">
+    <rect x="48" y="152" width="784" height="60" rx="6" fill="#0d1117" stroke="#30363d" stroke-width="1" />
+    <text x="65" y="176">
+      <tspan class="c-red">❌ Docker Container:</tspan> <tspan class="c-muted">Spawn latency ~680ms | Footprint ~180MB RAM | Host CPU 100% DoS</tspan>
+    </text>
+    <text x="65" y="200">
+      <tspan class="c-green">⚡ WASM-Sandbox:</tspan> <tspan class="c-white">Instant cold start</tspan> <tspan class="c-cyan">0.42ms</tspan> <tspan class="c-white">| Footprint</tspan> <tspan class="c-cyan">2.4MB RAM</tspan> <tspan class="c-white">| Zero Host Impact</tspan>
+    </text>
+  </g>
+
+  <!-- Line 4: Security Enforcement & Trap -->
+  <g class="code anim-3">
+    <text x="50" y="246">
+      <tspan class="c-yellow">⚡ [FuelGuard]</tspan> <tspan class="c-white">Deterministic metering active: counting guest WebAssembly ticks...</tspan>
+    </text>
+    <text x="50" y="274">
+      <tspan class="c-red">🛡️ [CapabilityBroker]</tspan> <tspan class="c-white">SSRF Blocked:</tspan> <tspan class="c-red">DENIED</tspan> <tspan class="c-muted">access to cloud metadata (169.254.169.254)</tspan>
+    </text>
+  </g>
+
+  <!-- Line 5: Clean Result Interception -->
+  <g class="code anim-4">
+    <rect x="48" y="296" width="784" height="64" rx="6" fill="#1c1917" stroke="#f59e0b" stroke-width="1.2" />
+    <text x="65" y="322">
+      <tspan class="c-yellow">🛑 OUT_OF_FUEL_TRAP:</tspan> <tspan class="c-white">Infinite loop stopped at exact instruction #10,000,000.</tspan>
+    </text>
+    <text x="65" y="344">
+      <tspan class="c-green">✔ Status:</tspan> <tspan class="c-muted">Host thread 100% unharmed. Sandbox state safely recycled in 0.08ms.</tspan>
+    </text>
+  </g>
+
+  <!-- Line 6: Prompt & blinking cursor -->
+  <g class="code anim-5">
+    <text x="50" y="392">
+      <tspan class="c-green">ready</tspan> <tspan class="c-muted">&gt;</tspan> <tspan class="c-white">sandbox.ready()</tspan> <tspan class="c-blue cursor">█</tspan>
+    </text>
+  </g>
+</svg>

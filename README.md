@@ -1,94 +1,121 @@
 # WASM-Sandbox 🛡️⚡
 
-**Micro-Ambienti Isolate in WebAssembly per l'Esecuzione Sicura di Codice Non Fidato**
+**Micro-Isolated WebAssembly Environments for Safe Untrusted Code Execution**
 
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/status-Architectural%20Design%20%26%20Setup-yellow.svg)]()
-[![Platform](https://img.shields.io/badge/target-Node.js%20%7C%20Go%20%7C%20Browser-orange.svg)]()
+[English](README.md) | [Italiano](README.it.md)
 
----
-
-## 💡 Vision & Concetto
-
-**WASM-Sandbox** è un runtime e una libreria ad alte prestazioni progettata per eseguire codice non fidato (Python, JavaScript, Lua compilati o interpretati all'interno di WebAssembly) con:
-- **Limiti deterministici di CPU e Istruzioni (Fuel/Gas Metering)**
-- **Quota rigida di memoria isolata (Linear Memory Boundaries)**
-- **Isolamento completo da host OS e filesystem (Virtual In-Memory VFS)**
-- **Capability-Based Security (Accesso di rete bloccato di default, con policy allowlist granulare)**
-
-### Perché WASM-Sandbox?
-Le architetture moderne basate su estensioni utente (Plugin System), piattaforme SaaS multi-tenant e **Agenti AI autonomi** necessitano dell'esecuzione dinamica di codice generato o inserito dall'utente.
-L'utilizzo di container Docker tradizionali o VM micro-VM (es. Firecracker) comporta:
-1. **Latenza di avvio elevata** (centinaia di millisecondi o secondi vs microsecondi in WASM).
-2. **Elevato consumo di RAM** (decine di MB per container vs pochi KB/MB per istanza WASM).
-3. **Complessità di orchestrazione** su piattaforme serverless, edge o direttamente nel browser.
-
-WASM-Sandbox offre isolamento a livello di processo con overhead minimale, perfetto sia per backend (Node.js, Go) che client (Browser / WebWorkers).
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
+[![Dual Licensed](https://img.shields.io/badge/Dual--Licensed-Commercial%20Available-green.svg)](COMMERCIAL.md)
+[![GitHub Sponsors](https://img.shields.io/badge/Sponsor-%E2%99%A5%20MRJonam91-ea4aaa.svg)](https://github.com/sponsors/MRJonam91)
+[![Ko-Fi](https://img.shields.io/badge/Ko--fi-Support-ff5e5b.svg)](https://ko-fi.com/mrjonam)
+[![BuyMeACoffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Donate-yellow.svg)](https://buymeacoffee.com/mrjonam)
+[![PayPal](https://img.shields.io/badge/PayPal-Donate-00457C.svg)](https://paypal.me/manorollo)
 
 ---
 
-## 🏗️ Architettura ad Alto Livello
+## 🎬 5-Second Interactive Demo
+
+![WASM-Sandbox Demo](assets/demo.svg)
+
+---
+
+## 💡 Why WASM-Sandbox?
+
+Running untrusted user code (Python, JavaScript, Lua) is a critical requirement for modern **AI Agents**, **Plugin Marketplaces**, and **Multi-Tenant SaaS platforms**. 
+
+Traditional isolation via Docker containers or micro-VMs imposes:
+- 🐌 **Heavy Cold Starts**: 500ms–2000ms spin-up latency per container.
+- 💾 **Bloated Memory Overhead**: 150MB–500MB RAM per instance.
+- ⚙️ **Complex Orchestration**: Impossible to run efficiently at edge or directly inside browser client sessions.
+
+**WASM-Sandbox** solves this with WebAssembly micro-isolates:
+- ⚡ **Cold Start in `< 0.5ms`** with `< 4MB` baseline RAM.
+- 🛑 **Deterministic CPU / Fuel Metering**: Terminate infinite loops and runaway computations without relying on asynchronous OS thread timers.
+- 🔒 **Linear Memory Hard Bounds**: Zero possibility of host memory buffer overflow or process memory leaks.
+- 🛡️ **Zero-Trust Network & Storage**: Virtual in-memory ephemeral filesystem (VFS) and anti-SSRF capability broker (blocking metadata endpoints like `169.254.169.254` and private networks by default).
+
+---
+
+## 🏗️ Architecture
 
 ```mermaid
 flowchart TD
     subgraph Host["Host Application (Node.js / Go / Browser)"]
-        ClientCode["Untrusted Code Snippet\n(Python / JS / Lua)"] --> PolicyManager["Sandbox Policy Manager\n(CPU, Memory, Network, FS)"]
-        PolicyManager --> WASMHost["WASM Host Binding\n(Wasmtime / Wazero / V8 WASM)"]
+        UntrustedSnippet["Untrusted Code\n(Python / JS / Lua)"] --> PolicyManager["Sandbox Policy Manager\n(Max Memory, Fuel Limit, Allowlist)"]
+        PolicyManager --> WASMHost["WASM Host Binding\n(V8 / Wasmtime / Wazero)"]
     end
 
-    subgraph Sandbox["WASM Execution Sandbox (Linear Memory Boundary)"]
-        WASMHost --> EngineLoader["Guest Runtime Engine\n(QuickJS / MicroPython / Lua VM)"]
-        EngineLoader --> FuelGuard["Fuel / Instruction Metering Guard"]
-        FuelGuard --> VFS["Virtual Isolated VFS (RAM)"]
-        FuelGuard --> CapabilityBroker["Network & System Capability Broker"]
+    subgraph MicroSandbox["WASM Isolated Boundary (Linear Memory)"]
+        WASMHost --> EngineShim["Guest Engine Runtime\n(QuickJS / MicroPython / Lua 5.4)"]
+        EngineShim --> FuelMeter["Deterministic Fuel Meter"]
+        FuelMeter --> InMemVFS["Ephemeral In-Memory VFS"]
+        FuelMeter --> CapabilityBroker["Capability Broker (Anti-SSRF & I/O)"]
     end
 
-    CapabilityBroker -.->|"DENY / Allowlist"| HostNetwork["Host Network"]
-    Sandbox -->|"Safe Output / Error / QuotaExceeded"| WASMHost
+    CapabilityBroker -.->|"DENIED by default"| HostNetwork["Host Network"]
+    MicroSandbox -->|"Deterministic Result / OutOfFuel Trap"| Host
 ```
 
 ---
 
-## 🎯 Caratteristiche Chiave
+## 📦 Easy-to-Extend Modular Core (<1,500 LOC)
 
-| Funzionalità | Descrizione |
-| :--- | :--- |
-| **Fuel / Gas Metering** | Interruzione garantita dei loop infiniti e computazioni DoS a livello di istruzioni WASM (senza affidarsi a `setTimeout`). |
-| **Memory Isolation** | Assegnazione statica e dinamica della memoria lineare WASM: nessun buffer overflow verso l'host. |
-| **Capability Sandbox** | Nessun accesso implicito a syscall POSIX, filesystem reale o socket di rete. |
-| **Multi-Language Guest** | Supporto nativo per l'interpretazione di **JavaScript** (QuickJS), **Python** (MicroPython / Pyodide WASI) e **Lua** (Lua 5.4 WASM). |
-| **Multi-Host Target** | Compatibilità con backend Node.js (V8 WASM / Wasmtime bindings), Go (Wazero pure Go WASM runtime) e Browser. |
-| **Instant Cold Start** | Avvio di una sandbox in `< 1ms` e footprint di memoria a riposo `< 5MB`. |
-
----
-
-## 📂 Struttura del Repository
+The core abstraction layer (`@wasm-sandbox/core`) is strictly maintained **under 1,500 lines of clean, strictly-typed TypeScript** to allow anyone to comprehend the entire isolation model and build a new custom engine or host adapter in less than an hour:
 
 ```
-WASM-Sandbox/
-├── packages/
-│   ├── core/                  # Specifiche, tipi e abstraction layer del Sandbox
-│   ├── engine-quickjs/        # Engine guest JavaScript ultra-leggero (QuickJS WASM)
-│   ├── engine-python/         # Engine guest Python (MicroPython / WASI)
-│   ├── engine-lua/            # Engine guest Lua (Lua 5.4 WASM)
-│   ├── runtime-node/          # Adapter e bindings per backend Node.js
-│   ├── runtime-go/            # Adapter per Go (Wazero pure Go)
-│   └── runtime-browser/       # Adapter per esecuzione Web / WebWorker
-├── docs/                      # Specifiche tecniche, threat model e benchmark
-│   ├── ARCHITECTURE.md        # Dettaglio tecnico del design
-│   ├── THREAT_MODEL.md        # Modello di minacce e garanzie di sicurezza
-│   ├── ROADMAP.md             # Fasi di sviluppo e milestone
-│   └── BENCHMARKS.md          # Metodologia di test prestazioni
-├── examples/                  # Esempi pratici di integrazione
-├── .github/                   # Workflows CI/CD, issue & PR templates
-├── LICENSE                    # Apache 2.0 License
-└── README.md                  # Questo file
+packages/
+├── core/                  # Clean core (< 500 LOC): types, policy, in-memory VFS, broker
+├── engine-quickjs/        # JavaScript (QuickJS WASM) engine with fuel hook
+├── engine-python/         # Python (MicroPython / WASI) engine
+├── engine-lua/            # Lua 5.4 VM engine
+├── runtime-node/          # Node.js host adapter (V8 WASM / Worker thread isolation)
+├── runtime-go/            # Pure Go host adapter (Wazero, zero CGO)
+└── runtime-browser/       # Web Worker client adapter
 ```
 
 ---
 
-## 🚀 Prossimi Passi
+## 🚀 Quickstart Example
 
-1. **Analisi e Specifiche Tecniche**: Consulta [ARCHITECTURE.md](docs/ARCHITECTURE.md) e [THREAT_MODEL.md](docs/THREAT_MODEL.md).
-2. **Tabella di Marcia**: Segui le milestone in [ROADMAP.md](docs/ROADMAP.md).
-3. **Contributi e Sicurezza**: Consulta [CONTRIBUTING.md](CONTRIBUTING.md) e [SECURITY.md](SECURITY.md).
+```typescript
+import { InMemoryVFS, CapabilityBroker, resolvePolicy } from '@wasm-sandbox/core';
+
+// 1. Define tight isolation constraints
+const policy = resolvePolicy({
+  maxMemoryBytes: 16 * 1024 * 1024, // 16 MB max linear memory
+  fuelLimit: 10_000_000,             // Stop after 10 million instructions
+  capabilities: {
+    network: { allowlist: ['api.github.com'] }, // Everything else is blocked
+    filesystem: { readOnly: true }
+  }
+});
+
+// 2. Initialize broker and in-memory virtual filesystem
+const broker = new CapabilityBroker(policy.capabilities.network.allowlist);
+const vfs = new InMemoryVFS({ '/app/entry.js': 'console.log("Secure Guest");' });
+
+// 3. SSRF and private networks are automatically neutralized
+broker.isNetworkAllowed('http://169.254.169.254'); // Returns false (SSRF blocked)
+broker.isNetworkAllowed('https://api.github.com');  // Returns true
+```
+
+---
+
+## 💖 Sponsorship & Donations
+
+WASM-Sandbox is actively maintained. If you or your company rely on lightweight code execution and sandbox security:
+- **GitHub Sponsors**: [github.com/sponsors/MRJonam91](https://github.com/sponsors/MRJonam91)
+- **Ko-fi**: [ko-fi.com/mrjonam](https://ko-fi.com/mrjonam)
+- **Buy Me A Coffee**: [buymeacoffee.com/mrjonam](https://buymeacoffee.com/mrjonam)
+- **PayPal**: [paypal.me/manorollo](https://paypal.me/manorollo)
+
+---
+
+## ⚖️ Dual-Licensing & Commercial Acquisition
+
+WASM-Sandbox is available under a **Dual-Licensing Model**:
+1. **Open-Source (GNU AGPLv3)**: Free for open-source projects compliant with the AGPL-3.0 network copyleft requirements.
+2. **Commercial & Enterprise License**: Available for proprietary, closed-source SaaS applications, AI agent systems, or OEM embedding without copyleft obligations.
+3. **Project Buyout / Acquisition**: Full transfer of intellectual property, copyright, and global exploitation rights is open for acquisition inquiries.
+
+For commercial licensing and project acquisition inquiries, please see [COMMERCIAL.md](COMMERCIAL.md) or contact **Manoj Rollo (@MRJonam91)** at [fbxmano@gmail.com](mailto:fbxmano@gmail.com).
