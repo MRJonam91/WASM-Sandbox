@@ -1,6 +1,6 @@
 {
   "name": "@wasm-sandbox/core",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha",
   "description": "Micro-Isolated WebAssembly Environments for Safe Untrusted Code Execution",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

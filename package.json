@@ -1,6 +1,6 @@
 {
   "name": "@wasm-sandbox/monorepo",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha",
   "private": true,
   "description": "Micro-Isolated WebAssembly Environments (JavaScript/QuickJS, Python, Lua) with Deterministic Fuel Metering, Linear Memory Bounds and Zero-Trust Capability Broker",
   "author": "Manoj Rollo <fbxmano@gmail.com> (https://github.com/MRJonam91)",
@@ -14,6 +14,7 @@
   "scripts": {
     "build": "npm run --workspaces --if-present build",
     "test": "node --test packages/core/test/core.test.mjs",
+    "bench": "node benchmarks/run-benchmarks.mjs",
     "lint": "npm run --workspaces --if-present lint",
     "verify:watermark": "node tools/verify-watermark.mjs"
   },

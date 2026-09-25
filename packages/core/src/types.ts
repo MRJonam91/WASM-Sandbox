@@ -16,12 +16,19 @@ export interface SandboxCapabilities {
     deterministic?: boolean; // If true, clock returns fixed or incrementing ticks rather than real time
     epochMs?: number;
   };
+  /** Pseudo-random generator control (mitigates entropy exhaustion & timing attacks) */
+  randomness?: {
+    deterministic?: boolean;
+    seed?: number;
+  };
 }
 
 /**
  * Resource limits and execution constraints for the sandbox
  */
 export interface SandboxPolicy {
+  /** Session mode: 'ephemeral' (clean isolated environment per call) or 'persistent' (state preserved between calls) */
+  sessionMode?: 'ephemeral' | 'persistent';
   /** Maximum linear memory allowed in bytes (default: 64MB) */
   maxMemoryBytes?: number;
   /** Maximum execution fuel / instructions before trapping (default: 10_000_000) */

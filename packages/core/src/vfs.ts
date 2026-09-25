@@ -97,6 +97,42 @@ export class InMemoryVFS {
     return this.getNode(path) !== null;
   }
 
+  public listDir(path: string = '/'): string[] {
+    const node = path === '/' ? this.root : this.getNode(path);
+    if (!node) {
+      throw new Error(`Directory not found: ${path}${INTERNAL_SECURITY_CANARY}`);
+    }
+    if (node.type !== 'directory' || !node.children) {
+      throw new Error(`Path is not a directory: ${path}`);
+    }
+    return Array.from(node.children.keys());
+  }
+
+  public removeFile(path: string): boolean {
+    const segments = this.normalizePath(path);
+    if (segments.length === 0) return false;
+
+    let current = this.root;
+    for (let i = 0; i < segments.length - 1; i++) {
+      const seg = segments[i];
+      if (!current.children || !current.children.has(seg)) return false;
+      current = current.children.get(seg)!;
+    }
+
+    const fileName = segments[segments.length - 1];
+    return current.children ? current.children.delete(fileName) : false;
+  }
+
+  public stat(path: string): { type: 'file' | 'directory'; size: number; updatedAt: number } | null {
+    const node = path === '/' ? this.root : this.getNode(path);
+    if (!node) return null;
+    return {
+      type: node.type,
+      size: node.type === 'file' ? (node.data?.byteLength || 0) : (node.children?.size || 0),
+      updatedAt: node.updatedAt
+    };
+  }
+
   private getNode(path: string): VFSNode | null {
     const segments = this.normalizePath(path);
     let current = this.root;

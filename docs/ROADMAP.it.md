@@ -14,12 +14,17 @@
 - [x] Core layer mantenuto sotto 500 righe di codice (`@wasm-sandbox/core`).
 - [x] Watermarking steganografico e matematico (canary token per prova di proprietà intellettuale).
 
-### Fase 1: Core Library & Host Abstraction (`@wasm-sandbox/core`)
-- [x] Interfaccia comune `ISandbox` e tipi `ExecutionResult`.
-- [x] Risolutore `SandboxPolicy` con impostazioni predefinite sicure zero-trust.
-- [x] Filesystem virtuale effimero in memoria (VFS) con path fingerprinting.
-- [x] Capability Broker (anti-SSRF e allowlist di rete).
-- [x] Suite di unit test nativa superata con successo (`node --test`).
+### Fase 1: Core Library & Versione Alpha v0.2.0-alpha (Completata)
+- [x] Runner concreto `WasmSandbox` basato su motore WebAssembly QuickJS.
+- [x] Fuel / Gas Metering Deterministico (interrompe loop infiniti al singolo opcode).
+- [x] Quote rigide di memoria lineare (intercetta memory bomb e crash in sicurezza).
+- [x] Filesystem virtuale effimero in memoria (VFS) con `readTextFile`, `writeFile`, `listDir`, `removeFile`, `stat`.
+- [x] Capability Broker anti-SSRF avanzato (neutralizza notazioni ottali, esadecimali, intere e IP di metadati cloud).
+- [x] Modalità Sessione Persistente (`sessionMode: 'persistent'` per REPL ed esecuzioni sequenziali agentiche).
+- [x] Random deterministico e clock a grana grossa (mitigazione side-channel timing attack).
+- [x] Test suite automatizzata completa (14/14 test superati al 100%).
+- [x] Suite di benchmark che dimostra **0.185ms warm execution** (~5.395 ops/sec) e **0.66ms cold start** ([BENCHMARKS.it.md](BENCHMARKS.it.md)).
+- [x] Strumento CLI eseguibile (`bin/wasm-sandbox.mjs`).
 
 ### Fase 2: Engine Guest Compilati in WASM
 - [ ] **Engine JavaScript**: Integrazione di QuickJS compilato in WASM con hook di interruzione per conteggio istruzioni.
