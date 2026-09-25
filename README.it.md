@@ -75,29 +75,52 @@ packages/
 
 ---
 
-## 🚀 Esempio Rapido di Utilizzo
+## 🚀 Esempio Rapido di Utilizzo (MVP Live)
 
 ```typescript
-import { InMemoryVFS, CapabilityBroker, resolvePolicy } from '@wasm-sandbox/core';
+import { WasmSandbox } from '@wasm-sandbox/core';
 
-// 1. Definisci le restrizioni della sandbox
-const policy = resolvePolicy({
+// 1. Crea una sandbox WebAssembly sicura con vincoli rigidi
+const sandbox = await WasmSandbox.create({
   maxMemoryBytes: 16 * 1024 * 1024, // Limite rigido: 16 MB di memoria lineare
-  fuelLimit: 10_000_000,             // Trap automatica dopo 10 milioni di istruzioni
+  fuelLimit: 50_000,                 // Interrompe loop infiniti in modo deterministico
   capabilities: {
-    network: { allowlist: ['api.github.com'] }, // Tutto il resto è bloccato
-    filesystem: { readOnly: true }
+    network: { allowlist: ['api.github.com'] },
+    filesystem: { readOnly: false }
   }
 });
 
-// 2. Inizializza il broker e il filesystem virtuale in RAM
-const broker = new CapabilityBroker(policy.capabilities.network.allowlist);
-const vfs = new InMemoryVFS({ '/app/entry.js': 'console.log("Sandbox Sicura");' });
+// 2. Esegui codice non fidato in isolamento completo
+const result = await sandbox.execute(`
+  console.log("Esecuzione dentro micro-isolato WebAssembly!");
+  
+  // Filesystem virtuale effimero isolato in RAM
+  fs.writeFile('/notes/user.txt', 'Dati protetti');
+  const letto = fs.readTextFile('/notes/user.txt');
+  
+  // Ritorno computazione
+  ({ status: 'ok', file: letto, totale: [10, 20, 30].reduce((a, b) => a + b, 0) });
+`);
 
-// 3. SSRF e reti private sono neutralizzati a priori
-broker.isNetworkAllowed('http://169.254.169.254'); // false (SSRF bloccato!)
-broker.isNetworkAllowed('https://api.github.com');  // true
+console.log(result.value);
+// => { status: 'ok', file: 'Dati protetti', totale: 60 }
+console.log('Stdout catturato:', result.stdout);
+console.log(`Tempo esecuzione: ${result.metrics.executionTimeMs}ms`);
 ```
+
+### 💻 Utilizzo da CLI
+
+```bash
+# Esegui codice JavaScript arbitrario in una micro-sandbox
+npx wasm-sandbox eval "console.log('Hello from WASM'); 2 + 2;"
+
+# Esegui un loop infinito bloccato dal limite fuel
+npx wasm-sandbox eval "let i=0; while(true) i++;" --fuel 50000
+
+# Esegui script non fidato con limite rigido di RAM
+npx wasm-sandbox run untrusted-agent.js --mem 16
+```
+
 
 ---
 

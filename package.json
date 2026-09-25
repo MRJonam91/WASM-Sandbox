@@ -2,17 +2,20 @@
   "name": "@wasm-sandbox/monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "Micro-Ambienti Isolate in WebAssembly per l'esecuzione sicura di codice non fidato",
-  "author": "MRJonam91",
-  "license": "Apache-2.0",
+  "description": "Micro-Isolated WebAssembly Environments (JavaScript/QuickJS, Python, Lua) with Deterministic Fuel Metering, Linear Memory Bounds and Zero-Trust Capability Broker",
+  "author": "Manoj Rollo <fbxmano@gmail.com> (https://github.com/MRJonam91)",
+  "license": "AGPL-3.0-or-later",
+  "bin": {
+    "wasm-sandbox": "./bin/wasm-sandbox.mjs"
+  },
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
     "build": "npm run --workspaces --if-present build",
-    "test": "npm run --workspaces --if-present test",
+    "test": "node --test packages/core/test/core.test.mjs",
     "lint": "npm run --workspaces --if-present lint",
-    "clean": "npm run --workspaces --if-present clean"
+    "verify:watermark": "node tools/verify-watermark.mjs"
   },
   "keywords": [
     "wasm",
@@ -25,13 +28,41 @@
     "fuel",
     "quickjs",
     "python",
-    "lua"
+    "lua",
+    "anti-ssrf",
+    "ai-agents",
+    "safe-eval"
   ],
   "engines": {
     "node": ">=20.0.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MRJonam91/WASM-Sandbox.git"
+  },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/MRJonam91"
+    },
+    {
+      "type": "ko-fi",
+      "url": "https://ko-fi.com/mrjonam"
+    },
+    {
+      "type": "buy-me-a-coffee",
+      "url": "https://buymeacoffee.com/mrjonam"
+    },
+    {
+      "type": "paypal",
+      "url": "https://paypal.me/manorollo"
+    }
+  ],
   "devDependencies": {
     "@types/node": "^26.6.2",
     "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "quickjs-emscripten": "^0.32.0"
   }
 }

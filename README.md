@@ -75,29 +75,52 @@ packages/
 
 ---
 
-## 🚀 Quickstart Example
+## 🚀 Quickstart Example (MVP Live)
 
 ```typescript
-import { InMemoryVFS, CapabilityBroker, resolvePolicy } from '@wasm-sandbox/core';
+import { WasmSandbox } from '@wasm-sandbox/core';
 
-// 1. Define tight isolation constraints
-const policy = resolvePolicy({
+// 1. Create a secure WebAssembly sandbox with strict resource limits
+const sandbox = await WasmSandbox.create({
   maxMemoryBytes: 16 * 1024 * 1024, // 16 MB max linear memory
-  fuelLimit: 10_000_000,             // Stop after 10 million instructions
+  fuelLimit: 50_000,                 // Stops infinite loops deterministically
   capabilities: {
-    network: { allowlist: ['api.github.com'] }, // Everything else is blocked
-    filesystem: { readOnly: true }
+    network: { allowlist: ['api.github.com'] },
+    filesystem: { readOnly: false }
   }
 });
 
-// 2. Initialize broker and in-memory virtual filesystem
-const broker = new CapabilityBroker(policy.capabilities.network.allowlist);
-const vfs = new InMemoryVFS({ '/app/entry.js': 'console.log("Secure Guest");' });
+// 2. Safely execute untrusted user code
+const result = await sandbox.execute(`
+  console.log("Running inside WebAssembly micro-isolate!");
+  
+  // Safe isolated Virtual In-Memory Filesystem (RAM only)
+  fs.writeFile('/notes/user.txt', 'Safe data');
+  const readBack = fs.readTextFile('/notes/user.txt');
+  
+  // Return computation
+  ({ status: 'ok', file: readBack, sum: [10, 20, 30].reduce((a, b) => a + b, 0) });
+`);
 
-// 3. SSRF and private networks are automatically neutralized
-broker.isNetworkAllowed('http://169.254.169.254'); // Returns false (SSRF blocked)
-broker.isNetworkAllowed('https://api.github.com');  // Returns true
+console.log(result.value);
+// => { status: 'ok', file: 'Safe data', sum: 60 }
+console.log('Stdout captured:', result.stdout);
+console.log(`Execution time: ${result.metrics.executionTimeMs}ms`);
 ```
+
+### 💻 CLI Usage
+
+```bash
+# Evaluate arbitrary JavaScript code in a micro-sandbox
+npx wasm-sandbox eval "console.log('Hello from WASM'); 2 + 2;"
+
+# Run an infinite loop safely constrained by fuel
+npx wasm-sandbox eval "let i=0; while(true) i++;" --fuel 50000
+
+# Execute untrusted script file with memory cap
+npx wasm-sandbox run untrusted-agent.js --mem 16
+```
+
 
 ---
 

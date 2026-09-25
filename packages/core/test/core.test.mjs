@@ -48,3 +48,79 @@ test('Sponsor Notice: produces valid URL format', () => {
   assert.match(notice, /https:\/\/github\.com\/sponsors\/MRJonam91/);
 });
 
+test('WasmSandbox: executes safe code and captures console output', async () => {
+  const { WasmSandbox } = await import('../dist/index.js');
+  const sandbox = await WasmSandbox.create();
+
+  const res = await sandbox.execute(`
+    console.log("Starting calculation");
+    const a = 10;
+    const b = 32;
+    a + b;
+  `);
+
+  assert.equal(res.success, true);
+  assert.equal(res.value, 42);
+  assert.match(res.stdout, /Starting calculation/);
+  assert.equal(res.metrics.fuelConsumed > 0, true);
+});
+
+test('WasmSandbox: safely halts infinite loop with OUT_OF_FUEL', async () => {
+  const { WasmSandbox } = await import('../dist/index.js');
+  const sandbox = await WasmSandbox.create({ fuelLimit: 5000 });
+
+  const res = await sandbox.execute(`
+    let counter = 0;
+    while (true) {
+      counter++;
+    }
+  `);
+
+  assert.equal(res.success, false);
+  assert.equal(res.error?.type, 'OUT_OF_FUEL');
+});
+
+test('WasmSandbox: halts memory bomb with OUT_OF_MEMORY', async () => {
+  const { WasmSandbox } = await import('../dist/index.js');
+  const sandbox = await WasmSandbox.create({ maxMemoryBytes: 1024 * 1024 }); // 1MB limit
+
+  const res = await sandbox.execute(`
+    const big = [];
+    for (let i = 0; i < 1e7; i++) {
+      big.push(new Array(1000));
+    }
+  `);
+
+  assert.equal(res.success, false);
+  assert.equal(res.error?.type, 'OUT_OF_MEMORY');
+});
+
+test('WasmSandbox: interacts with isolated In-Memory VFS', async () => {
+  const { WasmSandbox } = await import('../dist/index.js');
+  const sandbox = await WasmSandbox.create();
+
+  const res = await sandbox.execute(`
+    fs.writeFile('/notes/secret.txt', 'isolated-data-123');
+    const readBack = fs.readTextFile('/notes/secret.txt');
+    readBack;
+  `);
+
+  assert.equal(res.success, true);
+  assert.equal(res.value, 'isolated-data-123');
+  assert.equal(sandbox.getVFS().exists('/notes/secret.txt'), true);
+});
+
+test('WasmSandbox: blocks SSRF and unauthorized network attempts', async () => {
+  const { WasmSandbox } = await import('../dist/index.js');
+  const sandbox = await WasmSandbox.create({
+    capabilities: { network: { allowlist: ['api.github.com'] } }
+  });
+
+  const res = await sandbox.execute(`
+    network.assertAllowed('http://169.254.169.254');
+  `);
+
+  assert.equal(res.success, false);
+  assert.equal(res.error?.type, 'SECURITY_VIOLATION');
+});
+
