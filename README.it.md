@@ -4,12 +4,14 @@
 
 [English](README.md) | [Italiano](README.it.md)
 
+[![Release: v1.0.0](https://img.shields.io/badge/Release-v1.0.0--Stabile-blueviolet.svg)](https://github.com/MRJonam91/WASM-Sandbox/releases/tag/v1.0.0)
 [![Licenza: AGPL v3](https://img.shields.io/badge/Licenza-AGPL_v3-blue.svg)](LICENSE)
 [![Dual Licensed](https://img.shields.io/badge/Doppia--Licenza-Commerciale%20Disponibile-green.svg)](COMMERCIAL.md)
 [![GitHub Sponsors](https://img.shields.io/badge/Sponsor-%E2%99%A5%20MRJonam91-ea4aaa.svg)](https://github.com/sponsors/MRJonam91)
 [![Ko-Fi](https://img.shields.io/badge/Ko--fi-Support-ff5e5b.svg)](https://ko-fi.com/mrjonam)
 [![BuyMeACoffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Dona-yellow.svg)](https://buymeacoffee.com/mrjonam)
 [![PayPal](https://img.shields.io/badge/PayPal-Dona-00457C.svg)](https://paypal.me/manorollo)
+
 
 ---
 
@@ -75,7 +77,7 @@ packages/
 
 ---
 
-## 🚀 Esempi Rapidi di Utilizzo (v0.3.0-beta)
+## 🚀 Esempi Rapidi di Utilizzo (v1.0.0 Stabile)
 
 ### 1️⃣ JavaScript in WebAssembly (QuickJS)
 ```typescript

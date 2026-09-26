@@ -6,40 +6,43 @@
 
 ## 🗺️ Fasi e Milestone
 
-### Fase 0: Fondazioni e Specifiche (Completata)
-- [x] Inizializzazione repository, licenza AGPL-3.0 / Dual-License e configurazione FUNDING.yml.
-- [x] Definizione architettura generale ([ARCHITECTURE.it.md](ARCHITECTURE.it.md)) e Threat Model ([THREAT_MODEL.it.md](THREAT_MODEL.it.md)).
-- [x] Demo visuale animata ([assets/demo.svg](../assets/demo.svg)).
+### Fase 0: Fondazioni e Architettura (Completata ✅)
+- [x] Inizializzazione monorepo, impostazione licenza AGPL-3.0 / Dual-License e FUNDING.yml.
+- [x] Architettura Tecnica ([ARCHITECTURE.it.md](ARCHITECTURE.it.md)) e Threat Model ([THREAT_MODEL.it.md](THREAT_MODEL.it.md)).
+- [x] Demo visuale animata interattiva ([assets/demo.svg](../assets/demo.svg)).
 - [x] Documentazione bilingue completa in Italiano e Inglese.
-- [x] Core layer mantenuto sotto 500 righe di codice (`@wasm-sandbox/core`).
-- [x] Watermarking steganografico e matematico (canary token per prova di proprietà intellettuale).
+- [x] Codice del layer core mantenuto sotto 1.500 righe di codice (`@wasm-sandbox/core`).
+- [x] Token interni di integrità e protezione da alterazioni del codice.
 
-### Fase 1: Core Library & Versione Alpha v0.2.0-alpha (Completata)
-- [x] Runner concreto `WasmSandbox` basato su motore WebAssembly QuickJS.
-- [x] Fuel / Gas Metering Deterministico (interrompe loop infiniti al singolo opcode).
-- [x] Quote rigide di memoria lineare (intercetta memory bomb e crash in sicurezza).
+### Fase 1: Libreria Core & Primitive di Sicurezza (Completata ✅)
+- [x] Runner concreto `WasmSandbox` con motore WebAssembly QuickJS.
+- [x] Fuel / Gas Metering deterministico (arresto dei loop infiniti a livello di bytecode).
+- [x] Quote rigide di memoria lineare (intercetta memory bomb senza crash dell'host).
 - [x] Filesystem virtuale effimero in memoria (VFS) con `readTextFile`, `writeFile`, `listDir`, `removeFile`, `stat`.
 - [x] Capability Broker anti-SSRF avanzato (neutralizza notazioni ottali, esadecimali, intere e IP di metadati cloud).
 - [x] Modalità Sessione Persistente (`sessionMode: 'persistent'` per REPL ed esecuzioni sequenziali agentiche).
 - [x] Random deterministico e clock a grana grossa (mitigazione side-channel timing attack).
-- [x] Test suite automatizzata completa (14/14 test superati al 100%).
-- [x] Suite di benchmark che dimostra **0.185ms warm execution** (~5.395 ops/sec) e **0.66ms cold start** ([BENCHMARKS.it.md](BENCHMARKS.it.md)).
-- [x] Strumento CLI eseguibile (`bin/wasm-sandbox.mjs`).
 
-### Fase 2: Engine Guest Compilati in WASM & Versione Beta v0.3.0-beta (Corrente)
-- [x] **Engine JavaScript**: Integrazione QuickJS WebAssembly con hook carburante e interrupt metering.
-- [x] **Engine Lua 5.4 VM**: Integrazione Lua 5.4 in WebAssembly con supporto VFS in RAM, cattura print e broker anti-SSRF.
-- [x] **SandboxPool ad Alto Throughput**: Riciclo automatico delle istanze e pre-warming a latenza zero (< 0.55ms).
-- [x] **Mitigazione ReDoS**: Protezione contro backtracking catastrofico delle espressioni regolari.
-- [ ] **Engine Python**: Integrazione di MicroPython WASM / WASI minimale con quota memoria rigida.
+### Fase 2: Supporto Multi-Linguaggio (Completata ✅)
+- [x] **Engine JavaScript (QuickJS WASM)**: Sandbox JS completa con misurazione istruzioni e cattura console.
+- [x] **Engine Lua 5.4 VM (WebAssembly)**: Micro-ambienti Lua 5.4 nativi (`LuaSandbox`) con cattura print e integrazione VFS/broker.
+- [x] Esecuzione CLI multi-linguaggio (`npx wasm-sandbox eval "..." --lang lua`).
 
+### Fase 3: Pooling ad Alto Throughput & Performance (Completata ✅)
+- [x] `SandboxPool` pre-riscaldato con throughput inferiore a **0.55ms** per workload SaaS ad alto volume.
+- [x] Riciclo e reset automatico dello stato tra le esecuzioni.
+- [x] Suite di benchmark prestazionali completa (`npm run bench` / [BENCHMARKS.it.md](BENCHMARKS.it.md)).
 
-### Fase 3: Runtime Adapters
-- [ ] **Node.js (`@wasm-sandbox/runtime-node`)**: Runtime V8 WASM con isolamento opzionale su Worker Thread.
-- [ ] **Go (`wasm-sandbox-go`)**: Adapter per Go basato su Wazero (100% puro Go, zero CGO).
-- [ ] **Browser (`@wasm-sandbox/runtime-browser`)**: Adapter client Web Worker.
+### Fase 4: Hardening di Produzione (Versione v1.0.0 ✅)
+- [x] Mitigazione ReDoS contro backtracking catastrofico delle regex.
+- [x] Stress test di concorrenza (istanze sandbox parallele).
+- [x] Suite di test automatizzati completa (18/18 test superati al 100%).
+- [x] Strumento CLI pronto per la produzione (`bin/wasm-sandbox.mjs`).
+- [x] Modello di Doppia Licenza (AGPLv3 / Commerciale) e predisposizione al Buyout ([COMMERCIAL.md](../COMMERCIAL.md)).
 
-### Fase 4: Hardening, Benchmarking & Pronto per Vendita Commerciale
-- [ ] Suite di test contro DoS (loop infiniti, memory bombs, ricorsione).
-- [ ] Benchmark prestazionali: cold start vs warm start vs Docker vs isolati V8.
-- [ ] Packaging e canali per licenze commerciali e acquisizione d'impresa.
+---
+
+### 🔮 Obiettivi Post v1.0
+- [ ] **Engine Python**: Integrazione MicroPython WASM / minimal WASI.
+- [ ] **Adapter Host per Go**: Binding Wazero in puro Go (`wasm-sandbox-go`).
+- [ ] **Bundle Browser Standalone**: Pacchetto WebWorker pronto per CDN.
