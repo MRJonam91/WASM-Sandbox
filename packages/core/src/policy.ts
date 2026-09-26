@@ -3,6 +3,7 @@ import { SandboxPolicy } from './types.js';
 export const DEFAULT_SANDBOX_POLICY: Required<Omit<SandboxPolicy, 'capabilities'>> & {
   capabilities: Required<NonNullable<SandboxPolicy['capabilities']>>;
 } = {
+  language: 'javascript',
   sessionMode: 'ephemeral',
   maxMemoryBytes: 64 * 1024 * 1024, // 64 MB
   fuelLimit: 10_000_000,             // 10 million instructions
@@ -31,6 +32,7 @@ export const DEFAULT_SANDBOX_POLICY: Required<Omit<SandboxPolicy, 'capabilities'
  */
 export function resolvePolicy(policy?: SandboxPolicy): typeof DEFAULT_SANDBOX_POLICY {
   return {
+    language: policy?.language ?? DEFAULT_SANDBOX_POLICY.language,
     sessionMode: policy?.sessionMode ?? DEFAULT_SANDBOX_POLICY.sessionMode,
     maxMemoryBytes: policy?.maxMemoryBytes ?? DEFAULT_SANDBOX_POLICY.maxMemoryBytes,
     fuelLimit: policy?.fuelLimit ?? DEFAULT_SANDBOX_POLICY.fuelLimit,

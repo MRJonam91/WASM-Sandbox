@@ -6,21 +6,22 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { WasmSandbox, printDiscreetSponsorNotice } from '../packages/core/dist/index.js';
+import { WasmSandbox, LuaSandbox, printDiscreetSponsorNotice } from '../packages/core/dist/index.js';
 
 const args = process.argv.slice(2);
 const command = args[0];
 
 function printHelp() {
   console.log(`
-🛡️  WASM-Sandbox CLI (v0.1.0-mvp)
+🛡️  WASM-Sandbox CLI (v0.3.0-beta)
 Execute untrusted code in lightweight WebAssembly micro-isolates.
 
 Usage:
-  wasm-sandbox eval "<javascript-code>" [options]
+  wasm-sandbox eval "<code>" [options]
   wasm-sandbox run <file-path> [options]
 
 Options:
+  --lang <js|lua>     Execution language: 'javascript' (default) or 'lua'
   --fuel <number>     Instruction / fuel limit (default: 10,000,000)
   --mem <mb>          Linear memory limit in MB (default: 64)
   --allow <domain>    Add domain to network allowlist (repeatable)
@@ -28,9 +29,10 @@ Options:
   --help              Display this help menu
 
 Examples:
-  wasm-sandbox eval "console.log('Hello from WASM'); 2 + 2;"
+  wasm-sandbox eval "console.log('Hello from JS WASM'); 2 + 2;"
+  wasm-sandbox eval "print('Hello from Lua WASM!'); return 10 * 3;" --lang lua
   wasm-sandbox eval "let x = 0; while(true) x++;" --fuel 50000
-  wasm-sandbox run script.js --mem 16
+  wasm-sandbox run script.lua --lang lua
 `);
   printDiscreetSponsorNotice();
 }
@@ -41,6 +43,7 @@ if (!command || command === '--help' || command === '-h') {
 }
 
 let codeToRun = '';
+let language = 'javascript';
 let fuelLimit = 10_000_000;
 let maxMemoryBytes = 64 * 1024 * 1024;
 const allowlist = [];
@@ -48,7 +51,10 @@ let readOnlyFs = false;
 
 for (let i = 1; i < args.length; i++) {
   const arg = args[i];
-  if (arg === '--fuel' && args[i + 1]) {
+  if ((arg === '--lang' || arg === '-l') && args[i + 1]) {
+    const val = args[++i].toLowerCase();
+    language = val.includes('lua') ? 'lua' : 'javascript';
+  } else if (arg === '--fuel' && args[i + 1]) {
     fuelLimit = parseInt(args[++i], 10);
   } else if (arg === '--mem' && args[i + 1]) {
     maxMemoryBytes = parseInt(args[++i], 10) * 1024 * 1024;
@@ -72,6 +78,9 @@ if (command === 'eval') {
     process.exit(1);
   }
   codeToRun = readFileSync(resolve(filePath), 'utf8');
+  if (filePath.endsWith('.lua') && !args.includes('--lang')) {
+    language = 'lua';
+  }
 } else {
   console.error(`Unknown command: ${command}`);
   printHelp();
@@ -79,14 +88,19 @@ if (command === 'eval') {
 }
 
 async function main() {
-  const sandbox = await WasmSandbox.create({
+  const policy = {
+    language: language,
     fuelLimit,
     maxMemoryBytes,
     capabilities: {
       network: { allowlist },
       filesystem: { readOnly: readOnlyFs }
     }
-  });
+  };
+
+  const sandbox = language === 'lua' 
+    ? await LuaSandbox.create(policy) 
+    : await WasmSandbox.create(policy);
 
   const res = await sandbox.execute(codeToRun);
 

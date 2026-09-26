@@ -27,6 +27,8 @@ export interface SandboxCapabilities {
  * Resource limits and execution constraints for the sandbox
  */
 export interface SandboxPolicy {
+  /** Target execution language: 'javascript' (QuickJS WASM) or 'lua' (Lua 5.4 WASM) (default: 'javascript') */
+  language?: 'javascript' | 'lua';
   /** Session mode: 'ephemeral' (clean isolated environment per call) or 'persistent' (state preserved between calls) */
   sessionMode?: 'ephemeral' | 'persistent';
   /** Maximum linear memory allowed in bytes (default: 64MB) */

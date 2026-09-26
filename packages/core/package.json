@@ -1,6 +1,6 @@
 {
   "name": "@wasm-sandbox/core",
-  "version": "0.2.0-alpha",
+  "version": "0.3.0-beta",
   "description": "Micro-Isolated WebAssembly Environments for Safe Untrusted Code Execution",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -22,6 +22,7 @@
   "author": "Manoj Rollo <fbxmano@gmail.com> (https://github.com/MRJonam91)",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "quickjs-emscripten": "^0.32.0"
+    "quickjs-emscripten": "^0.32.0",
+    "wasmoon": "^1.16.0"
   }
 }

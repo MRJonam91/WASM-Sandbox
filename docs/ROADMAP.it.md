@@ -26,10 +26,13 @@
 - [x] Suite di benchmark che dimostra **0.185ms warm execution** (~5.395 ops/sec) e **0.66ms cold start** ([BENCHMARKS.it.md](BENCHMARKS.it.md)).
 - [x] Strumento CLI eseguibile (`bin/wasm-sandbox.mjs`).
 
-### Fase 2: Engine Guest Compilati in WASM
-- [ ] **Engine JavaScript**: Integrazione di QuickJS compilato in WASM con hook di interruzione per conteggio istruzioni.
-- [ ] **Engine Lua**: Compilazione di Lua 5.4 con allocator di memoria limitato e debug hook.
+### Fase 2: Engine Guest Compilati in WASM & Versione Beta v0.3.0-beta (Corrente)
+- [x] **Engine JavaScript**: Integrazione QuickJS WebAssembly con hook carburante e interrupt metering.
+- [x] **Engine Lua 5.4 VM**: Integrazione Lua 5.4 in WebAssembly con supporto VFS in RAM, cattura print e broker anti-SSRF.
+- [x] **SandboxPool ad Alto Throughput**: Riciclo automatico delle istanze e pre-warming a latenza zero (< 0.55ms).
+- [x] **Mitigazione ReDoS**: Protezione contro backtracking catastrofico delle espressioni regolari.
 - [ ] **Engine Python**: Integrazione di MicroPython WASM / WASI minimale con quota memoria rigida.
+
 
 ### Fase 3: Runtime Adapters
 - [ ] **Node.js (`@wasm-sandbox/runtime-node`)**: Runtime V8 WASM con isolamento opzionale su Worker Thread.

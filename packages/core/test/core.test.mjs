@@ -203,4 +203,78 @@ test('WasmSandbox: parallel concurrency stress test (10 parallel instances)', as
   await Promise.all(tasks);
 });
 
+test('LuaSandbox: executes Lua 5.4 in WebAssembly with print capture', async () => {
+  const { LuaSandbox } = await import('../dist/index.js');
+  const sandbox = await LuaSandbox.create();
+
+  const res = await sandbox.execute(`
+    print("Executing in Lua WASM")
+    local x = 20
+    local y = 22
+    return x + y
+  `);
+
+  assert.equal(res.success, true);
+  assert.equal(res.value, 42);
+  assert.match(res.stdout, /Executing in Lua WASM/);
+});
+
+test('LuaSandbox: interacts with In-Memory VFS and blocks SSRF', async () => {
+  const { LuaSandbox } = await import('../dist/index.js');
+  const sandbox = await LuaSandbox.create({
+    capabilities: { network: { allowlist: ['api.github.com'] } }
+  });
+
+  // VFS check
+  const vfsRes = await sandbox.execute(`
+    fs.writeFile('/lua/data.txt', 'From Lua!')
+    return fs.readTextFile('/lua/data.txt')
+  `);
+  assert.equal(vfsRes.success, true);
+  assert.equal(vfsRes.value, 'From Lua!');
+
+  // SSRF check
+  const netRes = await sandbox.execute(`
+    network.assertAllowed('http://169.254.169.254')
+  `);
+  assert.equal(netRes.success, false);
+  assert.equal(netRes.error?.type, 'SECURITY_VIOLATION');
+});
+
+test('SandboxPool: prewarms and recycles sandboxes cleanly', async () => {
+  const { SandboxPool } = await import('../dist/index.js');
+  const pool = new SandboxPool({ fuelLimit: 50_000 }, { minSize: 3, maxSize: 5 });
+
+  await pool.prewarm();
+  assert.equal(pool.available, 3);
+
+  // Test withSandbox helper
+  const val = await pool.withSandbox(async (sb) => {
+    const res = await sb.execute(`10 + 15;`);
+    return res.value;
+  });
+  assert.equal(val, 25);
+
+  // Pool restored after release
+  assert.equal(pool.available, 3);
+
+  await pool.drain();
+  assert.equal(pool.available, 0);
+});
+
+test('WasmSandbox: ReDoS mitigation safely halts catastrophic backtracking', async () => {
+  const { WasmSandbox } = await import('../dist/index.js');
+  const sandbox = await WasmSandbox.create({ timeoutMs: 300, fuelLimit: 20_000 });
+
+  // Catastrophic exponential backtracking regex
+  const res = await sandbox.execute(`
+    const re = /(a+)+$/;
+    re.test("aaaaaaaaaaaaaaaaaaaaaaaaaaaa!");
+  `);
+
+  assert.equal(res.success, false);
+  assert.equal(res.error?.type === 'TIMEOUT' || res.error?.type === 'OUT_OF_FUEL', true);
+});
+
+
 

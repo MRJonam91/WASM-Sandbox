@@ -27,10 +27,13 @@
 - [x] CLI Tool executable (`bin/wasm-sandbox.mjs`).
 
 
-### Phase 2: Guest Engines in WASM
-- [ ] **JavaScript Engine**: QuickJS compilation to WASM with interrupt metering hook.
-- [ ] **Lua Engine**: Lua 5.4 compilation with custom memory allocator and debug instruction hook.
+### Phase 2: Guest Engines in WASM & Beta Release v0.3.0-beta (Current)
+- [x] **JavaScript Engine**: QuickJS WebAssembly integration with interrupt instruction metering.
+- [x] **Lua 5.4 VM Engine**: WebAssembly Lua 5.4 integration with full In-Memory VFS, print capture, and anti-SSRF broker.
+- [x] **High-Throughput SandboxPool**: Automatic recycling, zero cold-start pre-warming (< 0.55ms throughput).
+- [x] **ReDoS Mitigation**: Catastrophic regex backtracking protection.
 - [ ] **Python Engine**: MicroPython WASM / minimal WASI build with rigid memory caps.
+
 
 ### Phase 3: Multi-Host Adapters
 - [ ] **Node.js (`@wasm-sandbox/runtime-node`)**: V8 WASM runtime with optional Worker Thread affinity.

@@ -75,51 +75,70 @@ packages/
 
 ---
 
-## 🚀 Esempio Rapido di Utilizzo (MVP Live)
+## 🚀 Esempi Rapidi di Utilizzo (v0.3.0-beta)
 
+### 1️⃣ JavaScript in WebAssembly (QuickJS)
 ```typescript
 import { WasmSandbox } from '@wasm-sandbox/core';
 
-// 1. Crea una sandbox WebAssembly sicura con vincoli rigidi
 const sandbox = await WasmSandbox.create({
-  maxMemoryBytes: 16 * 1024 * 1024, // Limite rigido: 16 MB di memoria lineare
-  fuelLimit: 50_000,                 // Interrompe loop infiniti in modo deterministico
-  capabilities: {
-    network: { allowlist: ['api.github.com'] },
-    filesystem: { readOnly: false }
-  }
+  fuelLimit: 50_000,
+  maxMemoryBytes: 16 * 1024 * 1024
 });
 
-// 2. Esegui codice non fidato in isolamento completo
 const result = await sandbox.execute(`
-  console.log("Esecuzione dentro micro-isolato WebAssembly!");
-  
-  // Filesystem virtuale effimero isolato in RAM
-  fs.writeFile('/notes/user.txt', 'Dati protetti');
+  fs.writeFile('/notes/user.txt', 'Dati protetti in JS');
   const letto = fs.readTextFile('/notes/user.txt');
-  
-  // Ritorno computazione
   ({ status: 'ok', file: letto, totale: [10, 20, 30].reduce((a, b) => a + b, 0) });
 `);
+console.log(result.value); // => { status: 'ok', file: 'Dati protetti in JS', totale: 60 }
+```
 
-console.log(result.value);
-// => { status: 'ok', file: 'Dati protetti', totale: 60 }
-console.log('Stdout catturato:', result.stdout);
-console.log(`Tempo esecuzione: ${result.metrics.executionTimeMs}ms`);
+### 2️⃣ Lua 5.4 in WebAssembly
+```typescript
+import { LuaSandbox } from '@wasm-sandbox/core';
+
+const luaSandbox = await LuaSandbox.create();
+const luaResult = await luaSandbox.execute(`
+  fs.writeFile('/notes/lua.txt', 'Dati protetti in Lua 5.4')
+  local data = fs.readTextFile('/notes/lua.txt')
+  print("Output Lua:", data)
+  return 10 * 4 + 2
+`);
+console.log(luaResult.value); // => 42
+```
+
+### 3️⃣ Pool Pre-Warmed ad Alto Throughput
+```typescript
+import { SandboxPool } from '@wasm-sandbox/core';
+
+// Pool a latenza zero per backend SaaS e agenti AI concorrenti
+const pool = new SandboxPool({ fuelLimit: 50_000 }, { minSize: 5 });
+await pool.prewarm();
+
+const output = await pool.withSandbox(async (sb) => {
+  const r = await sb.execute('20 + 22;');
+  return r.value;
+});
+console.log(output); // => 42 in meno di 0.2ms!
 ```
 
 ### 💻 Utilizzo da CLI
 
 ```bash
-# Esegui codice JavaScript arbitrario in una micro-sandbox
-npx wasm-sandbox eval "console.log('Hello from WASM'); 2 + 2;"
+# Esegui JavaScript in WebAssembly
+npx wasm-sandbox eval "console.log('Hello JS WASM'); 2 + 2;"
 
-# Esegui un loop infinito bloccato dal limite fuel
+# Esegui Lua 5.4 in WebAssembly
+npx wasm-sandbox eval "print('Hello Lua WASM'); return 10 * 4 + 2;" --lang lua
+
+# Loop infinito bloccato deterministicamente dal fuel limit
 npx wasm-sandbox eval "let i=0; while(true) i++;" --fuel 50000
 
-# Esegui script non fidato con limite rigido di RAM
-npx wasm-sandbox run untrusted-agent.js --mem 16
+# Esegui file di script untrusted
+npx wasm-sandbox run script.lua --lang lua
 ```
+
 
 
 ---
