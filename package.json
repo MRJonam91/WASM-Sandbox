@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "build": "npm run --workspaces --if-present build",
+    "pretest": "npm run build",
     "test": "node --test packages/core/test/core.test.mjs",
     "bench": "node benchmarks/run-benchmarks.mjs",
     "lint": "npm run --workspaces --if-present lint",

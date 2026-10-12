@@ -12,7 +12,7 @@ import { WasmSandbox, printDiscreetSponsorNotice } from '@wasm-sandbox/core';
 
 async function runDemo() {
   console.log('=====================================================');
-  console.log('🛡️  WASM-Sandbox MVP Live Demonstration');
+  console.log('🛡️  WASM-Sandbox v1.0.0 Live Demonstration');
   console.log('=====================================================\n');
 
   // --- 1. Basic Safe Execution ---

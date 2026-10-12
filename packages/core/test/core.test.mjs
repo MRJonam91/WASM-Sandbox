@@ -276,5 +276,25 @@ test('WasmSandbox: ReDoS mitigation safely halts catastrophic backtracking', asy
   assert.equal(res.error?.type === 'TIMEOUT' || res.error?.type === 'OUT_OF_FUEL', true);
 });
 
+test('CLI: --version outputs valid semver string', async () => {
+  const { execSync } = await import('node:child_process');
+  const out = execSync('node bin/wasm-sandbox.mjs --version', { encoding: 'utf8' }).trim();
+  assert.match(out, /^wasm-sandbox v1\.0\.0$/);
+});
 
+test('CLI: eval --json outputs valid JSON execution result', async () => {
+  const { execSync } = await import('node:child_process');
+  const out = execSync('node bin/wasm-sandbox.mjs eval "100 + 25" --json', { encoding: 'utf8' }).trim();
+  const parsed = JSON.parse(out);
+  assert.equal(parsed.success, true);
+  assert.equal(parsed.value, 125);
+  assert.equal(typeof parsed.metrics?.executionTimeMs, 'number');
+});
 
+test('CLI: eval with Lua returns proper result', async () => {
+  const { execSync } = await import('node:child_process');
+  const out = execSync('node bin/wasm-sandbox.mjs eval "return 8 * 8" --lang lua --json', { encoding: 'utf8' }).trim();
+  const parsed = JSON.parse(out);
+  assert.equal(parsed.success, true);
+  assert.equal(parsed.value, 64);
+});

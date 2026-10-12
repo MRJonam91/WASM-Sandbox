@@ -6,7 +6,7 @@ import { WasmSandbox, LuaSandbox, SandboxPool } from '@wasm-sandbox/core';
 
 async function benchmark() {
   console.log('======================================================');
-  console.log('⚡ WASM-Sandbox v0.3.0-beta Performance Benchmarks');
+  console.log('⚡ WASM-Sandbox v1.0.0 Performance Benchmarks');
   console.log('======================================================\n');
 
   // 1. Cold Start Latency Benchmark (JavaScript QuickJS WASM)

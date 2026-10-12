@@ -139,6 +139,12 @@ npx wasm-sandbox eval "let i=0; while(true) i++;" --fuel 50000
 
 # Esegui file di script untrusted
 npx wasm-sandbox run script.lua --lang lua
+
+# Output JSON strutturato (per pipeline di agenti AI e script)
+npx wasm-sandbox eval "2 + 2" --json
+
+# Avvia sessione REPL interattiva persistente
+npx wasm-sandbox repl --lang js
 ```
 
 
