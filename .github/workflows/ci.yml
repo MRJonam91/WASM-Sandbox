@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
   pull_request:
@@ -22,7 +23,8 @@ jobs:
           cache: 'npm'
 
       - name: Install Dependencies
-        run: npm ci --if-present
+        run: npm ci
 
       - name: Run Tests
-        run: npm test --if-present
+        # The root pretest compiles packages/core/dist before the tests import it.
+        run: npm test
